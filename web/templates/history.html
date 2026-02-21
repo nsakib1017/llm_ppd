@@ -11,30 +11,188 @@
     <div class="content-section">
         <p>View your mood patterns and mental health trends over time.</p>
 
+        {% if latest_questionnaire %}
+        <div class="current-status">
+            <h3>Latest Assessment</h3>
+            <div class="status-card risk-{{ latest_questionnaire.risk_level }}">
+                <p><strong>Date:</strong> {{ latest_questionnaire.created_at|date:"F d, Y" }}</p>
+                <p><strong>Total Score:</strong> {{ latest_questionnaire.total_score }}/48</p>
+                <p><strong>Risk Level:</strong> {{ latest_questionnaire.get_risk_level_display }}</p>
+                <a href="{% url 'questionnaire_results' pk=latest_questionnaire.pk %}" class="btn-primary">View Full Results</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <p>No questionnaire data yet. <a href="{% url 'questionnaire' %}">Take your first assessment</a> to start tracking your mental health.</p>
+        </div>
+        {% endif %}
+
         <div class="statistics-grid">
             <div class="stat-card">
-                <h3>Weekly Mood</h3>
-                <div class="chart-placeholder">
-                    <p>Chart will be displayed here</p>
-                </div>
+                <h3>Assessment History</h3>
+                {% if questionnaires %}
+                    <table class="assessment-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Score</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for q in questionnaires %}
+                            <tr>
+                                <td>{{ q.created_at|date:"M d, Y" }}</td>
+                                <td>{{ q.total_score }}</td>
+                                <td><span class="badge badge-{{ q.risk_level }}">{{ q.get_risk_level_display }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No assessments completed yet.</p>
+                {% endif %}
             </div>
 
             <div class="stat-card">
-                <h3>Monthly Trends</h3>
-                <div class="chart-placeholder">
-                    <p>Chart will be displayed here</p>
-                </div>
+                <h3>Daily Mood Check-Ins</h3>
+                {% if daily_checkins %}
+                    <div class="checkin-list">
+                        {% for checkin in daily_checkins|slice:":5" %}
+                        <div class="checkin-item">
+                            <p><strong>{{ checkin.created_at|date:"M d, Y" }}</strong></p>
+                            <p>Mood: {{ checkin.mood_rating }}/10</p>
+                            <p>Energy: {{ checkin.get_energy_level_display }}</p>
+                            <p>Stress: {{ checkin.get_stress_level_display }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No daily check-ins yet.</p>
+                {% endif %}
             </div>
 
             <div class="stat-card">
                 <h3>Key Insights</h3>
                 <ul class="insights-list">
-                    <li>Your mood has been stable this week</li>
-                    <li>Sleep quality impacts your daily mood</li>
-                    <li>Consider scheduling a check-in</li>
+                    {% if latest_questionnaire %}
+                        <li>You completed your latest assessment on {{ latest_questionnaire.created_at|date:"F d" }}</li>
+                        {% if latest_questionnaire.risk_level == 'low' %}
+                            <li>Your current risk level is low - keep up the good work!</li>
+                        {% elif latest_questionnaire.risk_level == 'moderate' %}
+                            <li>Consider reaching out to your healthcare provider for support</li>
+                        {% elif latest_questionnaire.risk_level == 'high' %}
+                            <li>We recommend scheduling an appointment with your healthcare provider soon</li>
+                        {% elif latest_questionnaire.risk_level == 'critical' %}
+                            <li>Please seek immediate professional support - you're not alone</li>
+                        {% endif %}
+                    {% else %}
+                        <li>Take your first assessment to get personalized insights</li>
+                    {% endif %}
+
+                    {% if avg_mood %}
+                        <li>Your average mood rating is {{ avg_mood }}/10</li>
+                    {% endif %}
+
+                    <li>Regular tracking helps identify patterns early</li>
+                    <li>Don't hesitate to reach out for support when needed</li>
                 </ul>
             </div>
         </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'questionnaire' %}" class="btn-primary">Take New Assessment</a>
+            <a href="{% url 'chat' %}" class="btn-secondary">Talk to Materna AI</a>
+        </div>
     </div>
 </div>
+
+<style>
+.current-status {
+    margin-bottom: 2rem;
+}
+
+.status-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.assessment-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.assessment-table th,
+.assessment-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.assessment-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-low {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-moderate {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-high {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-critical {
+    background-color: #f8d7da;
+    color: #721c24;
+    font-weight: 700;
+}
+
+.checkin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.checkin-item {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+}
+
+.checkin-item p {
+    margin: 0.25rem 0;
+}
+
+.no-data {
+    background-color: #e3f2fd;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+</style>
 {% endblock %}
