@@ -1,6 +1,9 @@
 import os
 import requests
 
+from dotenv import load_dotenv
+load_dotenv()
+
 FEATHERLESS_API_KEY = os.getenv("FEATHERLESS_API_KEY")
 API_URL = "https://api.featherless.ai/v1/chat/completions"
 
