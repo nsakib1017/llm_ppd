@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Your Results - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container results-container">
+    <div class="page-header">
+        <h2>Your Screening Results</h2>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="score-display">
+        <h2>Total Score: {{ questionnaire.total_score }}/{{ 48 }}</h2>
+        <p>Risk Level: {{ questionnaire.get_risk_level_display }}</p>
+    </div>
+
+    <div class="risk-level risk-{{ questionnaire.risk_level }}">
+        {% if questionnaire.risk_level == 'critical' %}
+            <h3>⚠️ Immediate Attention Needed</h3>
+            <p>Your responses indicate that you may be experiencing significant distress. Please seek immediate professional support.</p>
+            <div class="emergency-contacts">
+                <h4>Emergency Resources:</h4>
+                <ul>
+                    <li><strong>Call or text 988</strong> - Suicide & Crisis Lifeline (Available 24/7)</li>
+                    <li><strong>Call 911</strong> - If you are in immediate danger</li>
+                    <li><strong>Crisis Text Line:</strong> Text HOME to 741741</li>
+                </ul>
+            </div>
+        {% elif questionnaire.risk_level == 'high' %}
+            <h3>⚠️ High Risk Identified</h3>
+            <p>Your screening indicates you may be experiencing moderate to severe postpartum depression symptoms. We strongly recommend reaching out to a healthcare provider soon.</p>
+        {% elif questionnaire.risk_level == 'moderate' %}
+            <h3>⚡ Moderate Risk Identified</h3>
+            <p>You're showing some signs that may indicate mild to moderate postpartum mood changes. Consider talking to your healthcare provider about how you're feeling.</p>
+        {% else %}
+            <h3>✓ Low Risk</h3>
+            <p>Your screening suggests you're coping well overall. Continue to monitor your mental health and reach out for support if things change.</p>
+        {% endif %}
+    </div>
+
+    <div class="recommendations">
+        <h4>Recommended Next Steps:</h4>
+        <ul>
+            {% for recommendation in recommendations %}
+                <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="additional-resources">
+        <h4>Additional Resources:</h4>
+        <ul>
+            <li><strong>Postpartum Support International:</strong> 1-800-944-4773</li>
+            <li><strong>SAMHSA National Helpline:</strong> 1-800-662-4357</li>
+            <li><strong>National Maternal Mental Health Hotline:</strong> 1-833-943-5746</li>
+        </ul>
+    </div>
+
+    <div class="next-steps-buttons">
+        <a href="{% url 'history' %}" class="btn-primary">View Your History</a>
+        <a href="{% url 'chat' %}" class="btn-secondary">Talk to Materna AI</a>
+        <a href="{% url 'home' %}" class="btn-secondary">Return Home</a>
+    </div>
+
+    <div class="disclaimer">
+        <p><em><strong>Important:</strong> This screening is not a diagnosis. It's designed to help identify symptoms that may warrant professional evaluation. Always consult with a qualified healthcare provider for proper diagnosis and treatment.</em></p>
+    </div>
+</div>
+{% endblock %}

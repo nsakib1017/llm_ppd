@@ -1,25 +1,277 @@
-{% extends "web/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Questioneer - Materna Minds{% endblock %}
+{% block title %}Questionnaire - Materna Minds{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container questionnaire-container">
     <div class="page-header">
-        <h2>Mental Health Questionnaire</h2>
+        <h2>Postpartum Depression Screening</h2>
         <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
     </div>
 
-    <div class="content-section">
-        <p>Complete this questionnaire to help us understand your current mental health status.</p>
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-        <form method="post" class="questionnaire-form">
+    <div class="content-section">
+        <p class="intro-text">This comprehensive screening helps us understand your emotional well-being during the postpartum period. All responses are confidential and will be used to provide you with personalized support.</p>
+
+        <form method="post" class="questionnaire-form" id="questionnaireForm">
             {% csrf_token %}
-            <div class="form-group">
-                <label>This section will contain the mental health assessment questions.</label>
+
+            <!-- Section 1: Current Emotional State -->
+            <div class="question-section">
+                <h3>Section 1: Current Emotional State</h3>
+                <p class="section-subtitle">Over the past 2 weeks...</p>
+
+                <div class="question-group">
+                    <label class="question-label">1. Have you felt little interest or pleasure in doing things?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q1_interest_pleasure" value="0" required> Not at all</label>
+                        <label><input type="radio" name="q1_interest_pleasure" value="1"> Several days</label>
+                        <label><input type="radio" name="q1_interest_pleasure" value="2"> More than half the days</label>
+                        <label><input type="radio" name="q1_interest_pleasure" value="3"> Nearly every day</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">2. Have you felt down, depressed, or hopeless?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q2_depressed_hopeless" value="0" required> Not at all</label>
+                        <label><input type="radio" name="q2_depressed_hopeless" value="1"> Several days</label>
+                        <label><input type="radio" name="q2_depressed_hopeless" value="2"> More than half the days</label>
+                        <label><input type="radio" name="q2_depressed_hopeless" value="3"> Nearly every day</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">3. Have you felt anxious, worried, or overwhelmed?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q3_anxious_worried" value="0" required> Not at all</label>
+                        <label><input type="radio" name="q3_anxious_worried" value="1"> Several days</label>
+                        <label><input type="radio" name="q3_anxious_worried" value="2"> More than half the days</label>
+                        <label><input type="radio" name="q3_anxious_worried" value="3"> Nearly every day</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">4. Have you felt unusually irritable or angry?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q4_irritable_angry" value="0" required> Not at all</label>
+                        <label><input type="radio" name="q4_irritable_angry" value="1"> Several days</label>
+                        <label><input type="radio" name="q4_irritable_angry" value="2"> More than half the days</label>
+                        <label><input type="radio" name="q4_irritable_angry" value="3"> Nearly every day</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">5. Have you had difficulty enjoying motherhood?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q5_difficulty_enjoying_motherhood" value="0" required> Never</label>
+                        <label><input type="radio" name="q5_difficulty_enjoying_motherhood" value="1"> Sometimes</label>
+                        <label><input type="radio" name="q5_difficulty_enjoying_motherhood" value="2"> Often</label>
+                        <label><input type="radio" name="q5_difficulty_enjoying_motherhood" value="3"> Almost always</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">6. Have you had thoughts that you are not a good mother?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q6_thoughts_not_good_mother" value="0" required> Never</label>
+                        <label><input type="radio" name="q6_thoughts_not_good_mother" value="1"> Sometimes</label>
+                        <label><input type="radio" name="q6_thoughts_not_good_mother" value="2"> Often</label>
+                        <label><input type="radio" name="q6_thoughts_not_good_mother" value="3"> Almost always</label>
+                    </div>
+                </div>
+
+                <div class="question-group critical-question">
+                    <label class="question-label">7. Have you had thoughts of harming yourself? <span class="critical-indicator">🔴 Critical Question</span></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q7_thoughts_harming_self" value="0" required> Never</label>
+                        <label><input type="radio" name="q7_thoughts_harming_self" value="1"> Rarely</label>
+                        <label><input type="radio" name="q7_thoughts_harming_self" value="2"> Sometimes</label>
+                        <label><input type="radio" name="q7_thoughts_harming_self" value="3"> Often</label>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit" class="btn-primary">Submit Assessment</button>
+            <!-- Section 2: Sleep & Anxiety -->
+            <div class="question-section">
+                <h3>Section 2: Sleep & Anxiety Indicators</h3>
+
+                <div class="question-group">
+                    <label class="question-label">8. Can you sleep when your baby is asleep?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q8_sleep_when_baby_sleeps" value="0" required> Easily</label>
+                        <label><input type="radio" name="q8_sleep_when_baby_sleeps" value="1"> Sometimes</label>
+                        <label><input type="radio" name="q8_sleep_when_baby_sleeps" value="2"> Rarely</label>
+                        <label><input type="radio" name="q8_sleep_when_baby_sleeps" value="3"> Never</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">9. Are you constantly worried about your baby's health?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q9_worried_baby_health" value="0" required> Not at all</label>
+                        <label><input type="radio" name="q9_worried_baby_health" value="1"> Sometimes</label>
+                        <label><input type="radio" name="q9_worried_baby_health" value="2"> Often</label>
+                        <label><input type="radio" name="q9_worried_baby_health" value="3"> Always</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">10. Do you feel physically exhausted most days?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q10_physically_exhausted" value="0" required> No</label>
+                        <label><input type="radio" name="q10_physically_exhausted" value="1"> Mild</label>
+                        <label><input type="radio" name="q10_physically_exhausted" value="2"> Moderate</label>
+                        <label><input type="radio" name="q10_physically_exhausted" value="3"> Severe</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Social Support -->
+            <div class="question-section">
+                <h3>Section 3: Social Support & Relationships</h3>
+
+                <div class="question-group">
+                    <label class="question-label">11. How would you describe your relationship with your partner?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q11_relationship_partner" value="0" required> Very supportive</label>
+                        <label><input type="radio" name="q11_relationship_partner" value="1"> Somewhat supportive</label>
+                        <label><input type="radio" name="q11_relationship_partner" value="2"> Neutral</label>
+                        <label><input type="radio" name="q11_relationship_partner" value="3"> Strained</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">12. Do you feel emotionally supported by family or friends?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q12_emotional_support" value="0" required> Strong support</label>
+                        <label><input type="radio" name="q12_emotional_support" value="1"> Moderate</label>
+                        <label><input type="radio" name="q12_emotional_support" value="2"> Minimal</label>
+                        <label><input type="radio" name="q12_emotional_support" value="3"> None</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">13. Can you confide in someone when you feel distressed?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q13_confide_in_someone" value="0" required> Yes, always</label>
+                        <label><input type="radio" name="q13_confide_in_someone" value="1"> Sometimes</label>
+                        <label><input type="radio" name="q13_confide_in_someone" value="2"> Rarely</label>
+                        <label><input type="radio" name="q13_confide_in_someone" value="3"> No</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Mental Health History -->
+            <div class="question-section">
+                <h3>Section 4: Mental Health History</h3>
+
+                <div class="question-group">
+                    <label class="question-label">14. Did you experience depression before pregnancy?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q14_depression_before_pregnancy" value="0" required> No</label>
+                        <label><input type="radio" name="q14_depression_before_pregnancy" value="2"> Yes</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">15. Did you experience depression during pregnancy?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q15_depression_during_pregnancy" value="0" required> No</label>
+                        <label><input type="radio" name="q15_depression_during_pregnancy" value="2"> Yes</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">16. Is there a family history of depression or mental illness?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q16_family_history_mental_illness" value="0" required> No</label>
+                        <label><input type="radio" name="q16_family_history_mental_illness" value="1"> Yes</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">17. Have you experienced abuse or violence (past or current)?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q17_experienced_abuse" value="0" required> No</label>
+                        <label><input type="radio" name="q17_experienced_abuse" value="2"> Yes</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Pregnancy & Postpartum Factors -->
+            <div class="question-section">
+                <h3>Section 5: Pregnancy & Postpartum Factors</h3>
+
+                <div class="question-group">
+                    <label class="question-label">18. Was your latest pregnancy unplanned?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q18_unplanned_pregnancy" value="0" required> No</label>
+                        <label><input type="radio" name="q18_unplanned_pregnancy" value="1"> Yes</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">19. Did you experience major complications during delivery?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q19_delivery_complications" value="0" required> No</label>
+                        <label><input type="radio" name="q19_delivery_complications" value="1"> Yes</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label class="question-label">20. Is your baby currently experiencing significant health problems?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="q20_baby_health_problems" value="0" required> No</label>
+                        <label><input type="radio" name="q20_baby_health_problems" value="1"> Yes</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Submit Questionnaire</button>
+                <a href="{% url 'home' %}" class="btn-secondary">Cancel</a>
+            </div>
         </form>
     </div>
 </div>
+
+<div id="safetyAlert" class="safety-alert-modal" style="display: none;">
+    <div class="safety-alert-content">
+        <h2>⚠️ Immediate Support Available</h2>
+        <p>If you are experiencing thoughts of harming yourself, please seek immediate help:</p>
+        <ul>
+            <li><strong>Call or text 988</strong> (Suicide & Crisis Lifeline)</li>
+            <li><strong>Call 911</strong> for immediate emergency assistance</li>
+            <li>Contact your healthcare provider</li>
+            <li>Reach out to a trusted friend or family member</li>
+        </ul>
+        <button onclick="closeSafetyAlert()" class="btn-primary">I Understand</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const q7Radios = document.querySelectorAll('input[name="q7_thoughts_harming_self"]');
+
+    q7Radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value !== '0') {
+                document.getElementById('safetyAlert').style.display = 'flex';
+            }
+        });
+    });
+});
+
+function closeSafetyAlert() {
+    document.getElementById('safetyAlert').style.display = 'none';
+}
+</script>
 {% endblock %}
