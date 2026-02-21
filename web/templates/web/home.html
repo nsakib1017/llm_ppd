@@ -1,0 +1,42 @@
+{% extends "web/base.html" %}
+
+{% block title %}Home - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="welcome-section">
+        <h2>Welcome to Materna Minds</h2>
+        <p>Your companion for postpartum mental health and wellness</p>
+    </div>
+
+    <div class="navigation-grid">
+        <a href="{% url 'questioneer' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Questioneer</h3>
+                <p>Complete mental health assessments</p>
+            </div>
+        </a>
+
+        <a href="{% url 'daily_meds' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Daily Meds</h3>
+                <p>Track your medication schedule</p>
+            </div>
+        </a>
+
+        <a href="{% url 'mood_statistics' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Mood Statistics</h3>
+                <p>View your mood trends and insights</p>
+            </div>
+        </a>
+
+        <a href="{% url 'materna_ai' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Materna AI</h3>
+                <p>Chat with your AI support assistant</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

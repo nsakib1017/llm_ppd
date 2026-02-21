@@ -1,0 +1,41 @@
+{% extends "web/base.html" %}
+
+{% block title %}Mood Statistics - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Mood Statistics & Insights</h2>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="content-section">
+        <p>View your mood patterns and mental health trends over time.</p>
+
+        <div class="statistics-grid">
+            <div class="stat-card">
+                <h3>Weekly Mood</h3>
+                <div class="chart-placeholder">
+                    <p>Chart will be displayed here</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Monthly Trends</h3>
+                <div class="chart-placeholder">
+                    <p>Chart will be displayed here</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Key Insights</h3>
+                <ul class="insights-list">
+                    <li>Your mood has been stable this week</li>
+                    <li>Sleep quality impacts your daily mood</li>
+                    <li>Consider scheduling a check-in</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

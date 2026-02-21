@@ -46,6 +46,7 @@ local_settings.py
 .idea/
 *.swp
 *.swo
+.claude
 
 # OS files
 .DS_Store

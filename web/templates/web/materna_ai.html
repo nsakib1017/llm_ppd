@@ -1,0 +1,39 @@
+{% extends "web/base.html" %}
+
+{% block title %}Materna AI - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Materna AI Assistant</h2>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="content-section">
+        <p>Chat with our AI assistant for support, advice, and resources.</p>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <p><strong>Materna AI:</strong> Hello! I'm here to support you. How are you feeling today?</p>
+                </div>
+            </div>
+
+            <div class="chat-input-section">
+                <form method="post" id="chatForm">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text"
+                               name="message"
+                               id="messageInput"
+                               placeholder="Type your message here..."
+                               class="chat-input"
+                               autocomplete="off">
+                        <button type="submit" class="btn-send">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
