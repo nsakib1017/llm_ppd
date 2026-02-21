@@ -49,14 +49,14 @@ def generate_ai_reply(
 
     messages.append(
         {
-        "role": "system",
-        "content": (
-            "You are a helpful assistant.\n"
-            "- Use the retrieved documents only if they contain relevant information.\n"
-            "- If the documents do not contain the answer, say so clearly.\n"
-            "- Only include citations [source p.page] for statements that are directly supported by the retrieved text.\n"
-            "- If you did not use any retrieved text, do NOT include citations."
-        ),
+            "role": "user",
+            "content": (
+                "Answer the QUESTION below.\n"
+                "If the Retrieved Documents contain relevant info, use them and cite them.\n"
+                "If they do not contain relevant info, answer from your general knowledge and DO NOT cite.\n\n"
+                f"QUESTION:\n{user_text}\n\n"
+                f"Retrieved Documents:\n{rag_block if rag_block else '(none)'}"
+            ),
         }
     )
 
