@@ -1,3 +1,9 @@
 asgiref
 django
 sqlparse
+
+
+
+
+
+requests

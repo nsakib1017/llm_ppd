@@ -8,5 +8,6 @@ urlpatterns = [
     path("questionnaire/", views.questionnaire, name="questionnaire"),  # /questioneer/
     path("medication/", views.medication, name="medication"),  # /daily-meds/
     path("history/", views.history, name="history"),  # /mood-statistics/
-    path("chat/", views.chat, name="chat"),  # /materna-ai/
+    path("chat/", views.chat, name="chat"),
+    path("chat/clear/", views.chat_clear, name="chat_clear"),
 ]

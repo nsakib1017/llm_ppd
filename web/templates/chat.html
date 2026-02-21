@@ -3,36 +3,72 @@
 {% block title %}Materna AI - Materna Minds{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
-        <h2>Materna AI Assistant</h2>
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="m-0">Chat</h2>
+
+      <form method="post" action="{% url 'chat_clear' %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-secondary btn-sm" type="submit">
+          Clear
+        </button>
+      </form>
     </div>
 
-    <div class="content-section">
-        <p>Chat with our AI assistant for support, advice, and resources.</p>
-
-        <div class="chat-container">
-            <div class="chat-messages" id="chatMessages">
-                <div class="message ai-message">
-                    <p><strong>Materna AI:</strong> Hello! I'm here to support you. How are you feeling today?</p>
+    <div class="card shadow-sm">
+      <div class="card-body" style="height: 60vh; overflow-y: auto;">
+        {% if messages %}
+          {% for m in messages %}
+            {% if m.role == "user" %}
+              <div class="d-flex justify-content-end mb-3">
+                <div class="bg-primary text-white p-3 rounded-3" style="max-width: 80%;">
+                  <div class="small opacity-75 mb-1">You</div>
+                  <div style="white-space: pre-wrap;">{{ m.content }}</div>
                 </div>
-            </div>
+              </div>
+            {% else %}
+              <div class="d-flex justify-content-start mb-3">
+                <div class="bg-light border p-3 rounded-3" style="max-width: 80%;">
+                  <div class="small text-muted mb-1">Assistant</div>
+                  <div style="white-space: pre-wrap;">{{ m.content }}</div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="text-center text-muted py-5">
+            Start the conversation by sending a message.
+          </div>
+        {% endif %}
+      </div>
 
-            <div class="chat-input-section">
-                <form method="post" id="chatForm">
-                    {% csrf_token %}
-                    <div class="input-group">
-                        <input type="text"
-                               name="message"
-                               id="messageInput"
-                               placeholder="Type your message here..."
-                               class="chat-input"
-                               autocomplete="off">
-                        <button type="submit" class="btn-send">Send</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+      <div class="card-footer bg-white">
+        <form method="post" class="d-flex gap-2" autocomplete="off">
+          {% csrf_token %}
+
+          <input
+            type="text"
+            name="message"
+            class="form-control"
+            placeholder="Type your message..."
+            required
+          />
+
+          <button class="btn btn-primary" type="submit" {% if is_sending %}disabled{% endif %}>
+            {% if is_sending %}Sending...{% else %}Send{% endif %}
+          </button>
+        </form>
+
+        {% if error %}
+          <div class="alert alert-danger mt-3 mb-0">
+            {{ error }}
+          </div>
+        {% endif %}
+      </div>
     </div>
+
+  </div>
 </div>
 {% endblock %}
