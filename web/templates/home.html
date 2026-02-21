@@ -1,18 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
-</head>
-<body>
-    <h1>Home</h1>
-    <p>Welcome.</p>
+{% extends "base.html" %}
 
-    <nav>
-        <a href="/consent/">Consent</a> |
-        <a href="/questionnaire/">Questionnaire</a> |
-        <a href="/history/">History</a> |
-        <a href="/chat/">Chat</a> |
-        <a href="/medication/">Medication</a>
-    </nav>
-</body>
-</html>
+{% block title %}Home - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="welcome-section">
+        <h2>Welcome to Materna Minds</h2>
+        <p>Your companion for postpartum mental health and wellness</p>
+    </div>
+
+    <div class="navigation-grid">
+        <a href="{% url 'questionnaire' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Questionnaire</h3>
+                <p>Complete mental health assessments</p>
+            </div>
+        </a>
+
+        <a href="{% url 'medication' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Daily Meds</h3>
+                <p>Track your medication schedule</p>
+            </div>
+        </a>
+
+        <a href="{% url 'history' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Mood Statistics</h3>
+                <p>View your mood trends and insights</p>
+            </div>
+        </a>
+
+        <a href="{% url 'chat' %}" class="nav-card">
+            <div class="card-content">
+                <h3>Materna AI</h3>
+                <p>Chat with your AI support assistant</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

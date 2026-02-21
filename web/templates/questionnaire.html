@@ -1,11 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Questionnaire</title>
-</head>
-<body>
-    <h1>Questionnaire</h1>
-    <p>Questionnaire page.</p>
-    <a href="/">Back Home</a>
-</body>
-</html>
+{% extends "web/base.html" %}
+
+{% block title %}Questioneer - Materna Minds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Mental Health Questionnaire</h2>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="content-section">
+        <p>Complete this questionnaire to help us understand your current mental health status.</p>
+
+        <form method="post" class="questionnaire-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>This section will contain the mental health assessment questions.</label>
+            </div>
+
+            <button type="submit" class="btn-primary">Submit Assessment</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

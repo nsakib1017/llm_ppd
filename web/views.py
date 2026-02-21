@@ -1,19 +1,19 @@
 from django.shortcuts import render
 
 def home(request):
-    return render(request, 'web/home.html')
+    return render(request, 'home.html')
 
 def consent(request):
-    return HttpResponse("<h1>Consent</h1><p>Consent page.</p>")
+    return render(request, 'consent.html')
 
-def questioneer(request):
-    return render(request, 'web/questioneer.html')
+def questionnaire(request):
+    return render(request, 'questionnaire.html')
 
-def daily_meds(request):
-    return render(request, 'web/daily_meds.html')
+def medication(request):
+    return render(request, 'medication.html')
 
-def mood_statistics(request):
-    return render(request, 'web/mood_statistics.html')
+def history(request):
+    return render(request, 'history.html')
 
-def materna_ai(request):
-    return render(request, 'web/materna_ai.html')
+def chat(request):
+    return render(request, 'chat.html')
