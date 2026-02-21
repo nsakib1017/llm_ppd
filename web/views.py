@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 import requests
+from .rag.llm import call_featherless   
 import json
 
 SESSION_KEY = "chat_messages"
