@@ -18,21 +18,21 @@
     </div>
 
     <div class="card shadow-sm">
-      <div class="card-body" style="height: 60vh; overflow-y: auto;">
+      <div id="chatBody" class="card-body" style="height: 60vh; overflow-y: auto;">
         {% if messages %}
           {% for m in messages %}
-            {% if m.role == "user" %}
+            {% if m.role|default:'' == "user" %}
               <div class="d-flex justify-content-end mb-3">
                 <div class="bg-primary text-white p-3 rounded-3" style="max-width: 80%;">
                   <div class="small opacity-75 mb-1">You</div>
-                  <div style="white-space: pre-wrap;">{{ m.content }}</div>
+                  <div style="white-space: pre-wrap;">{{ m.content|default:'' }}</div>
                 </div>
               </div>
             {% else %}
               <div class="d-flex justify-content-start mb-3">
                 <div class="bg-light border p-3 rounded-3" style="max-width: 80%;">
                   <div class="small text-muted mb-1">Assistant</div>
-                  <div style="white-space: pre-wrap;">{{ m.content }}</div>
+                  <div style="white-space: pre-wrap;">{{ m.content|default:'' }}</div>
                 </div>
               </div>
             {% endif %}
@@ -56,8 +56,8 @@
             required
           />
 
-          <button class="btn btn-primary" type="submit" {% if is_sending %}disabled{% endif %}>
-            {% if is_sending %}Sending...{% else %}Send{% endif %}
+          <button class="btn btn-primary" type="submit">
+            Send
           </button>
         </form>
 
@@ -71,4 +71,12 @@
 
   </div>
 </div>
+
+<script>
+  // Auto-scroll to the bottom whenever the page loads
+  (function() {
+    const el = document.getElementById("chatBody");
+    if (el) el.scrollTop = el.scrollHeight;
+  })();
+</script>
 {% endblock %}
