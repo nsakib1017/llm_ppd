@@ -1,10 +1,19 @@
 from django.shortcuts import render
 
-# Create your views here.
-from django.http import HttpResponse
-
 def home(request):
-    return HttpResponse("<h1>Home</h1><p>Welcome.</p>")
+    return render(request, "home.html")
 
 def consent(request):
-    return HttpResponse("<h1>Consent</h1><p>Consent page.</p>")
+    return render(request, "consent.html")
+
+def questionnaire(request):
+    return render(request, "questionnaire.html")
+
+def history(request):
+    return render(request, "history.html")
+
+def chat(request):
+    return render(request, "chat.html")
+
+def medication(request):
+    return render(request, "medication.html")
