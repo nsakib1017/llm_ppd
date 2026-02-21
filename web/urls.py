@@ -10,4 +10,5 @@ urlpatterns = [
     path("medication/", views.medication, name="medication"),  # /medication/
     path("history/", views.history, name="history"),  # /history/
     path("chat/", views.chat, name="chat"),  # /chat/
+    path("chat/clear/", views.chat_clear, name="chat_clear"),  # /chat/clear/
 ]
