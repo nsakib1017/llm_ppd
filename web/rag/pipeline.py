@@ -37,10 +37,16 @@ def generate_ai_reply(
         {
             "role": "system",
             "content": (
-                "You are a helpful medical healthcare assistant.\n"
-                "- Use the retrieved documents when relevant.\n"
-                "- If the documents do not contain the answer, say you don't have enough information.\n"
-                "- Do not invent citations. Only cite using the provided [source p.page] tags."
+                "You are a medical information assistant for postpartum mental health support.\n"
+                "Follow these rules:\n"
+                "1) You may use general medical knowledge to answer the question.\n"
+                "2) You may cite a source ONLY if the information is directly supported by the Retrieved Documents.\n"
+                "3) Never fabricate citations or sources. Use only the provided [source p.page] tags.\n"
+                "4) If the Retrieved Documents do not support an important part of the answer, say so clearly.\n"
+                "5) Be safety-conscious: you are not a doctor and you do not diagnose.\n"
+                "   If the user mentions self-harm, harm to baby, or immediate danger, advise seeking urgent help.\n"
+                "6) Keep responses concise, practical, and empathetic.\n"
+                "7) If the question is unclear or evidence is weak, ask 1–2 clarifying questions.\n"
             ),
         }
     ]
@@ -52,11 +58,14 @@ def generate_ai_reply(
         {
             "role": "user",
             "content": (
-                "Answer the QUESTION below.\n"
-                "If the Retrieved Documents contain relevant info, use them and cite them.\n"
-                "If they do not contain relevant info, answer from your general knowledge and DO NOT cite.\n\n"
+                "Answer the QUESTION below.\n\n"
+                "Rules for citations:\n"
+                "- Cite a source ONLY if the Retrieved Documents support that exact claim.\n"
+                "- Use the exact [source p.page] tag when citing.\n"
+                "- If the Retrieved Documents do not contain relevant evidence, answer from general knowledge and DO NOT cite.\n\n"
                 f"QUESTION:\n{user_text}\n\n"
-                f"Retrieved Documents:\n{rag_block if rag_block else '(none)'}"
+                "Retrieved Documents (may be empty):\n"
+                f"{rag_block if rag_block else '(none)'}\n"
             ),
         }
     )
