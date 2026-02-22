@@ -1,13 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import Avg, Count
-from django.db.models.functions import TruncDate
 from .models import PostpartumQuestionnaire, DailyMoodCheckIn
 from django.views.decorators.http import require_http_methods
 import json
 
 from .rag.pipeline import generate_ai_reply
-from .rag.llm import call_featherless
 
 
 
@@ -50,20 +47,10 @@ def chat(request):
         _set_messages(request, messages)
 
         try:
-            # 2) build chat history excluding system; your generate_ai_reply adds system itself
-            # include everything so far (user/assistant). If you prefer, you can limit history length.
             chat_history = [m for m in messages if m["role"] in ("user", "assistant")]
-
-            # 3) call your RAG pipeline
             reply, rag_results = generate_ai_reply(user_text=user_text, chat_history=chat_history[:-1], k=5)
-            # Note: chat_history[:-1] excludes the latest user message because generate_ai_reply
-            # appends the current user_text itself. (Avoid duplicating it.)
-
-            # 4) add assistant turn
             messages.append({"role": "assistant", "content": reply})
             _set_messages(request, messages)
-
-            # 5) store latest sources for display
             request.session[LAST_SOURCES_KEY] = rag_results
             request.session.modified = True
 
@@ -75,7 +62,7 @@ def chat(request):
     return render(request, "chat.html", {
         "messages": messages,
         "error": error,
-        "sources": sources,   # latest RAG results (optional UI)
+        "sources": sources,
     })
 
 
