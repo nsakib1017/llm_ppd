@@ -1,13 +1,74 @@
+from io import BytesIO
+from datetime import datetime
+import os
+from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import PostpartumQuestionnaire, DailyMoodCheckIn
 from django.views.decorators.http import require_http_methods
+from django.contrib import messages as dj_messages
 import json
 from .rag.pipeline import generate_ai_reply
-
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 SESSION_KEY = "chat_messages"
 LAST_SOURCES_KEY = "last_rag_sources"
+
+
+
+def _save_chat_pdf(msgs):
+    export_dir = os.path.join(settings.BASE_DIR, "web", "data", "pdfs")
+    os.makedirs(export_dir, exist_ok=True)
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"chat_transcript_{ts}.pdf"
+    file_path = os.path.join(export_dir, filename)
+
+    doc = SimpleDocTemplate(
+        file_path,
+        pagesize=letter,
+        leftMargin=0.75 * inch,
+        rightMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+        title="MaternaMind Chat Transcript",
+    )
+
+    styles = getSampleStyleSheet()
+    story = [
+        Paragraph("MaternaMind Chat Transcript", styles["Title"]),
+        Spacer(1, 10),
+        Paragraph(f"Exported: {ts}", styles["BodyText"]),
+        Spacer(1, 14),
+    ]
+
+    if not msgs:
+        story.append(Paragraph("No messages to export.", styles["BodyText"]))
+    else:
+        for m in msgs:
+            role = (m.get("role") or "").strip().lower()
+            content = (m.get("content") or "").strip()
+            if not content:
+                continue
+
+            safe = (
+                content.replace("&", "&amp;")
+                       .replace("<", "&lt;")
+                       .replace(">", "&gt;")
+                       .replace("\n", "<br/>")
+            )
+
+            who = "You" if role == "user" else "Assistant"
+            story.append(Paragraph(f"<b>{who}:</b>", styles["BodyText"]))
+            story.append(Paragraph(safe, styles["BodyText"]))
+            story.append(Spacer(1, 12))
+
+    doc.build(story)
+    return filename
 
 
 def _get_messages(request):
@@ -29,24 +90,46 @@ def _set_messages(request, msgs):
 
 @require_http_methods(["GET", "POST"])
 def chat(request):
-    messages = _get_messages(request)
+    chat_messages = _get_messages(request)
     error = None
     sources = request.session.get(LAST_SOURCES_KEY, [])
 
     if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+
+        # ✅ Export PDF (no redirect, stay on chat page)
+        if action == "export_pdf":
+            try:
+                filename = _save_chat_pdf(chat_messages)
+                dj_messages.success(request, f"Exported PDF")
+            except Exception as e:
+                dj_messages.error(request, f"Export failed: {str(e)}")
+
+            # render the same page (no redirect)
+            return render(request, "chat.html", {
+                "chat_messages": chat_messages,
+                "error": None,
+                "sources": sources,
+            })
+
+        # ✅ Normal send message flow (your existing logic)
         user_text = (request.POST.get("message") or "").strip()
         if not user_text:
             return redirect("chat")
 
-        # 1) add user turn
-        messages.append({"role": "user", "content": user_text})
-        _set_messages(request, messages)
+        chat_messages.append({"role": "user", "content": user_text})
+        _set_messages(request, chat_messages)
 
         try:
-            chat_history = [m for m in messages if m["role"] in ("user", "assistant")]
-            reply, rag_results = generate_ai_reply(user_text=user_text, chat_history=chat_history[:-1], k=5)
-            messages.append({"role": "assistant", "content": reply})
-            _set_messages(request, messages)
+            chat_history = [m for m in chat_messages if m["role"] in ("user", "assistant")]
+            reply, rag_results = generate_ai_reply(
+                user_text=user_text,
+                chat_history=chat_history[:-1],
+                k=5
+            )
+            chat_messages.append({"role": "assistant", "content": reply})
+            _set_messages(request, chat_messages)
+
             request.session[LAST_SOURCES_KEY] = rag_results
             request.session.modified = True
 
@@ -56,11 +139,10 @@ def chat(request):
             error = str(e)
 
     return render(request, "chat.html", {
-        "messages": messages,
+        "chat_messages": chat_messages,
         "error": error,
         "sources": sources,
     })
-
 
 @require_http_methods(["POST"])
 def chat_clear(request):
