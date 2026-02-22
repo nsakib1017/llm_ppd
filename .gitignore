@@ -35,6 +35,7 @@ staticfiles/
 # Local settings
 local_settings.py
 .env
+web/__pycache__/
 
 # Migrations (optional: remove if you want to track migrations)
 **/migrations/*
