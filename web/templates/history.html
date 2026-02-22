@@ -3,145 +3,343 @@
 {% block title %}Mood Statistics - Materna Minds{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="page-header">
+<div class="container py-4">
+    <div class="mb-4">
         <h2>Mood Statistics & Insights</h2>
+        <p class="text-muted mb-0">View your mood patterns and mental health trends over time.</p>
     </div>
 
-    <div class="content-section">
-        <p>View your mood patterns and mental health trends over time.</p>
-
-        {% if latest_questionnaire %}
-        <div class="current-status">
-            <h3>Latest Assessment</h3>
-            <div class="status-card risk-{{ latest_questionnaire.risk_level }}">
-                <p><strong>Date:</strong> {{ latest_questionnaire.created_at|date:"F d, Y" }}</p>
-                <p><strong>Total Score:</strong> {{ latest_questionnaire.total_score }}/48</p>
-                <p><strong>Risk Level:</strong> {{ latest_questionnaire.get_risk_level_display }}</p>
-                <a href="{% url 'questionnaire_results' pk=latest_questionnaire.pk %}" class="btn-primary">View Full Results</a>
-            </div>
-        </div>
-        {% else %}
-        <div class="no-data">
-            <p>No questionnaire data yet. <a href="{% url 'questionnaire' %}">Take your first assessment</a> to start tracking your mental health.</p>
-        </div>
-        {% endif %}
-
-        <div class="statistics-grid">
-            <div class="stat-card">
-                <h3>Assessment History</h3>
-                {% if questionnaires %}
-                    <table class="assessment-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Score</th>
-                                <th>Risk Level</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for q in questionnaires %}
-                            <tr>
-                                <td>{{ q.created_at|date:"M d, Y" }}</td>
-                                <td>{{ q.total_score }}</td>
-                                <td><span class="badge badge-{{ q.risk_level }}">{{ q.get_risk_level_display }}</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p>No assessments completed yet.</p>
-                {% endif %}
-            </div>
-
-            <div class="stat-card">
-                <h3>Daily Mood Check-Ins</h3>
-                {% if daily_checkins %}
-                    <div class="checkin-list">
-                        {% for checkin in daily_checkins|slice:":5" %}
-                        <div class="checkin-item">
-                            <p><strong>{{ checkin.created_at|date:"M d, Y" }}</strong></p>
-                            <p>Mood: {{ checkin.mood_rating }}/10</p>
-                            <p>Energy: {{ checkin.get_energy_level_display }}</p>
-                            <p>Stress: {{ checkin.get_stress_level_display }}</p>
+    <div class="row g-3 mb-4">
+        <!-- Weekly Mood Card with Chart -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm weekly-card" role="button"
+                 data-bs-toggle="modal" data-bs-target="#weeklyMoodModal">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="h5 mb-1">Weekly Mood</h3>
+                            <div class="text-muted small">Last 7 days</div>
                         </div>
-                        {% endfor %}
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                            Avg <span id="weeklyAvgBadge">{{ weekly_avg|default:"N/A" }}</span>/10
+                        </span>
                     </div>
-                {% else %}
-                    <p>No daily check-ins yet.</p>
-                {% endif %}
-            </div>
 
-            <div class="stat-card">
-                <h3>Key Insights</h3>
-                <ul class="insights-list">
-                    {% if latest_questionnaire %}
-                        <li>You completed your latest assessment on {{ latest_questionnaire.created_at|date:"F d" }}</li>
-                        {% if latest_questionnaire.risk_level == 'low' %}
-                            <li>Your current risk level is low - keep up the good work!</li>
-                        {% elif latest_questionnaire.risk_level == 'moderate' %}
-                            <li>Consider reaching out to your healthcare provider for support</li>
-                        {% elif latest_questionnaire.risk_level == 'high' %}
-                            <li>We recommend scheduling an appointment with your healthcare provider soon</li>
-                        {% elif latest_questionnaire.risk_level == 'critical' %}
-                            <li>Please seek immediate professional support - you're not alone</li>
-                        {% endif %}
-                    {% else %}
-                        <li>Take your first assessment to get personalized insights</li>
-                    {% endif %}
+                    <div class="mt-3 p-3 rounded-3 bg-light border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="small text-muted">Today</div>
+                                <div class="fs-4 fw-semibold lh-1">
+                                    <span id="weeklyToday">{{ today_mood|default:"--" }}</span><span class="text-muted fs-6">/10</span>
+                                </div>
+                                <div class="small">
+                                    <span class="text-success fw-semibold" id="weeklyTrend">{{ mood_trend|default:"No data" }}</span>
+                                </div>
+                            </div>
 
-                    {% if avg_mood %}
-                        <li>Your average mood rating is {{ avg_mood }}/10</li>
-                    {% endif %}
+                            <div style="width: 140px; height: 48px;">
+                                <canvas id="weeklySparkline"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
-                    <li>Regular tracking helps identify patterns early</li>
-                    <li>Don't hesitate to reach out for support when needed</li>
-                </ul>
+                    <div class="mt-3 d-flex align-items-center justify-content-between">
+                        <span class="small text-muted">Tap to open full chart</span>
+                        <span class="small fw-semibold text-primary">View</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="action-buttons">
-            <a href="{% url 'questionnaire' %}" class="btn-primary">Take New Assessment</a>
-            <a href="{% url 'chat' %}" class="btn-secondary">Talk to Materna AI</a>
+        <!-- Monthly Trends -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-2">Monthly Trends</h3>
+                    <div class="border rounded p-3" style="height:180px;">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Key Insights</h3>
+                    <ul class="mb-0">
+                        {% if latest_questionnaire %}
+                            <li>Latest assessment: {{ latest_questionnaire.get_risk_level_display }}</li>
+                            <li>Completed on {{ latest_questionnaire.created_at|date:"F d" }}</li>
+                        {% endif %}
+
+                        {% if avg_mood %}
+                            <li>Your average mood is {{ avg_mood }}/10</li>
+                        {% endif %}
+
+                        {% if daily_checkins.count > 0 %}
+                            <li>You've completed {{ daily_checkins.count }} check-ins</li>
+                        {% else %}
+                            <li>Start daily check-ins to see insights</li>
+                        {% endif %}
+
+                        <li>Regular tracking helps identify patterns early</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assessment History Table -->
+    {% if questionnaires %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Questionnaire History</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Total Score</th>
+                            <th>Risk Level</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in questionnaires %}
+                        <tr>
+                            <td>{{ q.created_at|date:"M d, Y" }}</td>
+                            <td>{{ q.total_score }}/48</td>
+                            <td>
+                                <span class="badge badge-{{ q.risk_level }}">
+                                    {{ q.get_risk_level_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'questionnaire_results' pk=q.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View Results
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Daily Check-Ins -->
+    {% if daily_checkins %}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Recent Daily Check-Ins</h3>
+            <div class="row g-3">
+                {% for checkin in daily_checkins|slice:":6" %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded border">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong>{{ checkin.created_at|date:"M d, Y" }}</strong>
+                            <span class="badge bg-primary">{{ checkin.mood_rating }}/10</span>
+                        </div>
+                        <div class="small text-muted">
+                            <div>Sleep: {{ checkin.get_hours_of_sleep_display }}</div>
+                            <div>Energy: {{ checkin.get_energy_level_display }}</div>
+                            <div>Stress: {{ checkin.get_stress_level_display }}</div>
+                        </div>
+                        {% if checkin.mood_description %}
+                        <div class="mt-2 small fst-italic">"{{ checkin.mood_description }}"</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <strong>No daily check-ins yet.</strong>
+        <a href="{% url 'daily_checkin' %}" class="alert-link">Complete your first check-in</a> to start tracking your mood patterns.
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+        <a href="{% url 'daily_checkin' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Daily Check-In
+        </a>
+        <a href="{% url 'questionnaire' %}" class="btn btn-outline-primary">
+            <i class="bi bi-file-text"></i> Take Assessment
+        </a>
+    </div>
+</div>
+
+<!-- Weekly Mood Modal -->
+<div class="modal fade" id="weeklyMoodModal" tabindex="-1" aria-labelledby="weeklyMoodModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="weeklyMoodModalLabel">Weekly Mood (Last 7 Days)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted">Mood scale: 1 (low) – 10 (high)</small>
+                    <small class="text-muted" id="weeklyMoodSummary"></small>
+                </div>
+
+                <div style="height: 360px;">
+                    <canvas id="weeklyMoodChart"></canvas>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Get data from Django context
+const weeklyData = {{ weekly_chart_data|safe }};
+const monthlyData = {{ monthly_chart_data|safe }};
+
+// Weekly Sparkline (mini chart)
+const sparklineCtx = document.getElementById('weeklySparkline');
+if (sparklineCtx && weeklyData.length > 0) {
+    new Chart(sparklineCtx, {
+        type: 'line',
+        data: {
+            labels: weeklyData.map(d => d.day),
+            datasets: [{
+                data: weeklyData.map(d => d.mood),
+                borderColor: '#0d6efd',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { display: false },
+                y: { display: false, min: 0, max: 10 }
+            }
+        }
+    });
+}
+
+// Monthly Trend Chart
+const monthlyCtx = document.getElementById('monthlyTrendChart');
+if (monthlyCtx && monthlyData.length > 0) {
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyData.map(d => d.week),
+            datasets: [{
+                label: 'Avg Mood',
+                data: monthlyData.map(d => d.avg_mood),
+                backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 10, ticks: { stepSize: 2 } }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+// Weekly Mood Modal Chart
+let weeklyMoodChartInstance = null;
+const weeklyMoodModal = document.getElementById('weeklyMoodModal');
+
+weeklyMoodModal.addEventListener('shown.bs.modal', () => {
+    if (weeklyData.length === 0) return;
+
+    const labels = weeklyData.map(d => d.day);
+    const moodValues = weeklyData.map(d => d.mood);
+
+    const avg = (moodValues.reduce((a,b)=>a+b,0) / moodValues.length).toFixed(1);
+    const min = Math.min(...moodValues);
+    const max = Math.max(...moodValues);
+    document.getElementById('weeklyMoodSummary').innerText = `Avg ${avg} • Low ${min} • High ${max}`;
+
+    const ctx = document.getElementById('weeklyMoodChart').getContext('2d');
+
+    if (weeklyMoodChartInstance) weeklyMoodChartInstance.destroy();
+
+    weeklyMoodChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Mood (1–10)',
+                data: moodValues,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 3,
+                tension: 0.35,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 1,
+                    max: 10,
+                    ticks: { stepSize: 1 },
+                    title: { display: true, text: 'Mood' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: (context) => {
+                            const i = context.dataIndex;
+                            if (weeklyData[i].sleep) {
+                                return `Sleep: ${weeklyData[i].sleep}`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+weeklyMoodModal.addEventListener('hidden.bs.modal', () => {
+    if (weeklyMoodChartInstance) {
+        weeklyMoodChartInstance.destroy();
+        weeklyMoodChartInstance = null;
+    }
+});
+</script>
+
 <style>
-.current-status {
-    margin-bottom: 2rem;
-}
-
-.status-card {
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-}
-
-.assessment-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.assessment-table th,
-.assessment-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.assessment-table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
-
-.badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
 .badge-low {
     background-color: #d4edda;
     color: #155724;
@@ -163,36 +361,13 @@
     font-weight: 700;
 }
 
-.checkin-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.weekly-card {
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 
-.checkin-item {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 5px;
-    border-left: 4px solid #3498db;
-}
-
-.checkin-item p {
-    margin: 0.25rem 0;
-}
-
-.no-data {
-    background-color: #e3f2fd;
-    padding: 2rem;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 2rem;
+.weekly-card:hover {
+    transform: translateY(-2px);
 }
 </style>
 {% endblock %}
