@@ -10,7 +10,7 @@ API_URL = "https://api.featherless.ai/v1/chat/completions"
 def call_featherless(messages, model="deepseek-ai/DeepSeek-V3-0324", temperature=0.7, timeout=60):
     if not FEATHERLESS_API_KEY:
         raise RuntimeError(
-            "FEATHERLESS_API_KEY is not set. In cmd: set FEATHERLESS_API_KEY=... (or use setx + reopen terminal)."
+            "FEATHERLESS_API_KEY is not set."
         )
 
     headers = {
