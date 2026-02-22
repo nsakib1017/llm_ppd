@@ -9,7 +9,6 @@ import faiss
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 
-
 @dataclass
 class Chunk:
     text: str

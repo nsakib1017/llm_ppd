@@ -36,7 +36,7 @@ def generate_ai_reply(
         {
             "role": "system",
             "content": (
-                "You are a helpful assistant.\n"
+                "You are a helpful medical healthcare assistant.\n"
                 "- Use the retrieved documents when relevant.\n"
                 "- If the documents do not contain the answer, say you don't have enough information.\n"
                 "- Do not invent citations. Only cite using the provided [source p.page] tags."
