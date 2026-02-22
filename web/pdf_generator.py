@@ -13,7 +13,7 @@ from django.core.serializers import serialize
 
 def get_pdf_directory():
     """Ensure the PDF directory exists and return its path"""
-    pdf_dir = os.path.join(settings.BASE_DIR, 'web', 'data', 'pdfs')
+    pdf_dir = os.path.join(settings.BASE_DIR, 'web', 'EMR')
     os.makedirs(pdf_dir, exist_ok=True)
     return pdf_dir
 
