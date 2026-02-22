@@ -1,6 +1,8 @@
 from io import BytesIO
 from datetime import datetime
 import os
+import subprocess
+import sys
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -101,7 +103,12 @@ def chat(request):
         if action == "export_pdf":
             try:
                 filename = _save_chat_pdf(chat_messages)
-                dj_messages.success(request, f"Exported PDF")
+                dj_messages.success(request, f"Exported PDF {filename}")
+                script_path = os.path.join(settings.BASE_DIR, "web", "rag", "ingest.py")
+                try:
+                    subprocess.run([sys.executable, script_path], capture_output=True,text=True)
+                except Exception as e:
+                    dj_messages.error(request, f"Something went wrong")
             except Exception as e:
                 dj_messages.error(request, f"Export failed: {str(e)}")
 
