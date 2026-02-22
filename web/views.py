@@ -3,12 +3,8 @@ from django.contrib import messages
 from .models import PostpartumQuestionnaire, DailyMoodCheckIn
 from django.views.decorators.http import require_http_methods
 import json
-
 from .rag.pipeline import generate_ai_reply
 
-
-
-from .rag.pipeline import generate_ai_reply
 
 SESSION_KEY = "chat_messages"
 LAST_SOURCES_KEY = "last_rag_sources"
