@@ -45,10 +45,11 @@
       </div>
 
       <div class="card-footer bg-white">
-        <form method="post" class="d-flex gap-2" autocomplete="off">
+        <form id="chatForm" method="post" class="d-flex gap-2" autocomplete="off">
           {% csrf_token %}
 
           <input
+            id="chatInput"
             type="text"
             name="message"
             class="form-control"
@@ -56,13 +57,13 @@
             required
           />
 
-          <button class="btn btn-primary" type="submit">
+          <button id="sendBtn" class="btn btn-primary" type="submit">
             Send
           </button>
         </form>
 
         {% if sources %}
-          <div class="mt-3">
+          <div id="sourcesBlock" class="mt-3">
             <details>
               <summary class="text-muted">Sources used (latest reply)</summary>
               <div class="mt-2">
@@ -99,6 +100,45 @@
   (function() {
     const el = document.getElementById("chatBody");
     if (el) el.scrollTop = el.scrollHeight;
+  })();
+
+  // Show typing indicator ONLY inside chat area for assistant
+  (function() {
+    const form = document.getElementById("chatForm");
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("chatInput");
+    const chatBody = document.getElementById("chatBody");
+    const sources = document.getElementById("sourcesBlock");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function() {
+      if (!input.value.trim()) return;
+
+      // Hide sources while waiting
+      if (sources) sources.style.display = "none";
+
+      // Disable UI to prevent double submits
+      sendBtn.disabled = true;
+      input.readOnly = true;
+
+      // Add typing bubble in chat area
+      const typingBubble = document.createElement("div");
+      typingBubble.id = "typingBubble";
+      typingBubble.className = "d-flex justify-content-start mb-3";
+      typingBubble.innerHTML = `
+        <div class="bg-light border p-3 rounded-3" style="max-width: 80%;">
+          <div class="small text-muted mb-1">Assistant</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+            <span class="text-muted">Typing...</span>
+          </div>
+        </div>
+      `;
+
+      chatBody.appendChild(typingBubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
   })();
 </script>
 {% endblock %}
