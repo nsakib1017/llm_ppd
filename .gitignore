@@ -31,7 +31,7 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
-
+*.faiss
 # Local settings
 local_settings.py
 .env
