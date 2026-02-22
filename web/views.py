@@ -5,16 +5,11 @@ from django.db.models.functions import TruncDate
 from .models import PostpartumQuestionnaire, DailyMoodCheckIn
 from django.views.decorators.http import require_http_methods
 import json
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
 
 from .rag.pipeline import generate_ai_reply
 from .rag.llm import call_featherless
 
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
+
 
 from .rag.pipeline import generate_ai_reply
 
