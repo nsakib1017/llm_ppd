@@ -13,15 +13,25 @@ from .rag.llm import call_featherless
 
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
+from django.shortcuts import render, redirect
+from django.views.decorators.http import require_http_methods
+
+from .rag.pipeline import generate_ai_reply
 
 SESSION_KEY = "chat_messages"
+LAST_SOURCES_KEY = "last_rag_sources"
 
 
 def _get_messages(request):
     msgs = request.session.get(SESSION_KEY, [])
     if not isinstance(msgs, list):
-        msgs = []
-    return msgs
+        return []
+    # keep only valid items
+    cleaned = []
+    for m in msgs:
+        if isinstance(m, dict) and "role" in m and "content" in m:
+            cleaned.append({"role": m["role"], "content": m["content"]})
+    return cleaned
 
 
 def _set_messages(request, msgs):
@@ -33,29 +43,34 @@ def _set_messages(request, msgs):
 def chat(request):
     messages = _get_messages(request)
     error = None
+    sources = request.session.get(LAST_SOURCES_KEY, [])
 
     if request.method == "POST":
         user_text = (request.POST.get("message") or "").strip()
         if not user_text:
             return redirect("chat")
 
-        # Add user message
-        messages.append({
-            "role": "user",
-            "content": user_text
-        })
+        # 1) add user turn
+        messages.append({"role": "user", "content": user_text})
         _set_messages(request, messages)
 
         try:
-            # Send full conversation history
-            assistant_text = call_featherless(messages)
+            # 2) build chat history excluding system; your generate_ai_reply adds system itself
+            # include everything so far (user/assistant). If you prefer, you can limit history length.
+            chat_history = [m for m in messages if m["role"] in ("user", "assistant")]
 
-            # Add assistant reply
-            messages.append({
-                "role": "assistant",
-                "content": assistant_text
-            })
+            # 3) call your RAG pipeline
+            reply, rag_results = generate_ai_reply(user_text=user_text, chat_history=chat_history[:-1], k=5)
+            # Note: chat_history[:-1] excludes the latest user message because generate_ai_reply
+            # appends the current user_text itself. (Avoid duplicating it.)
+
+            # 4) add assistant turn
+            messages.append({"role": "assistant", "content": reply})
             _set_messages(request, messages)
+
+            # 5) store latest sources for display
+            request.session[LAST_SOURCES_KEY] = rag_results
+            request.session.modified = True
 
             return redirect("chat")
 
@@ -64,13 +79,16 @@ def chat(request):
 
     return render(request, "chat.html", {
         "messages": messages,
-        "error": error
+        "error": error,
+        "sources": sources,   # latest RAG results (optional UI)
     })
 
 
 @require_http_methods(["POST"])
 def chat_clear(request):
-    _set_messages(request, [])
+    request.session[SESSION_KEY] = []
+    request.session[LAST_SOURCES_KEY] = []
+    request.session.modified = True
     return redirect("chat")
 
 def home(request):

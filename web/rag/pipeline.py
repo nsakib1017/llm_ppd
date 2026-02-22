@@ -1,10 +1,11 @@
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from .retrieve import retrieve
 from .llm import call_featherless
-
-INDEX_DIR = "rag_index"
-
+    
+INDEX_DIR = "web/rag_index"
+print(os.getcwd())
 
 def generate_ai_reply(
     user_text: str,
@@ -61,5 +62,4 @@ def generate_ai_reply(
     )
 
     reply = call_featherless(messages)
-    print("AI Reply:", reply)
     return reply, rag_results
