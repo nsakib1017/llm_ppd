@@ -101,21 +101,14 @@ def medication(request):
 
 def history(request):
     """Display mood statistics and trends"""
+    from datetime import datetime, timedelta
+    from django.db.models import Avg
+
     # Get all questionnaires
     questionnaires = PostpartumQuestionnaire.objects.all().order_by('-created_at')[:10]
 
     # Get all daily check-ins
     daily_checkins = DailyMoodCheckIn.objects.all().order_by('-created_at')[:30]
-
-    # Calculate statistics
-    mood_data = []
-    for checkin in daily_checkins:
-        mood_data.append({
-            'date': checkin.created_at.strftime('%Y-%m-%d'),
-            'mood': checkin.mood_rating,
-            'stress': checkin.stress_level,
-            'energy': checkin.energy_level
-        })
 
     # Get latest questionnaire for risk level
     latest_questionnaire = questionnaires.first() if questionnaires.exists() else None
@@ -126,15 +119,116 @@ def history(request):
         total_mood = sum([checkin.mood_rating for checkin in daily_checkins])
         avg_mood = round(total_mood / len(daily_checkins), 1)
 
+    # Weekly data for charts (last 7 days)
+    today = datetime.now().date()
+    week_ago = today - timedelta(days=6)
+    weekly_checkins = DailyMoodCheckIn.objects.filter(
+        created_at__date__gte=week_ago
+    ).order_by('created_at')
+
+    weekly_chart_data = []
+    day_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    for i in range(7):
+        day = week_ago + timedelta(days=i)
+        day_checkins = [c for c in weekly_checkins if c.created_at.date() == day]
+
+        if day_checkins:
+            avg_mood_day = sum(c.mood_rating for c in day_checkins) / len(day_checkins)
+            sleep_val = day_checkins[0].get_hours_of_sleep_display() if day_checkins else ''
+
+            weekly_chart_data.append({
+                'day': day_names[day.weekday()],
+                'mood': round(avg_mood_day, 1),
+                'sleep': sleep_val
+            })
+        else:
+            weekly_chart_data.append({
+                'day': day_names[day.weekday()],
+                'mood': 0,
+                'sleep': ''
+            })
+
+    # Monthly data (last 4 weeks)
+    monthly_chart_data = []
+    for week_num in range(4):
+        week_start = today - timedelta(days=(week_num + 1) * 7)
+        week_end = week_start + timedelta(days=6)
+
+        week_checkins = DailyMoodCheckIn.objects.filter(
+            created_at__date__gte=week_start,
+            created_at__date__lte=week_end
+        )
+
+        if week_checkins.exists():
+            avg = week_checkins.aggregate(Avg('mood_rating'))['mood_rating__avg']
+            monthly_chart_data.insert(0, {
+                'week': f'Week {4-week_num}',
+                'avg_mood': round(avg, 1) if avg else 0
+            })
+        else:
+            monthly_chart_data.insert(0, {
+                'week': f'Week {4-week_num}',
+                'avg_mood': 0
+            })
+
+    # Today's mood
+    today_checkin = DailyMoodCheckIn.objects.filter(created_at__date=today).first()
+    today_mood = today_checkin.mood_rating if today_checkin else None
+
+    # Calculate weekly average
+    weekly_avg = None
+    if weekly_checkins.exists():
+        weekly_avg = round(sum(c.mood_rating for c in weekly_checkins) / len(weekly_checkins), 1)
+
+    # Mood trend
+    mood_trend = "No data"
+    if len(weekly_chart_data) >= 2 and weekly_chart_data[-1]['mood'] > 0:
+        if weekly_chart_data[-1]['mood'] > weekly_chart_data[-2]['mood']:
+            mood_trend = "↑ improving"
+        elif weekly_chart_data[-1]['mood'] < weekly_chart_data[-2]['mood']:
+            mood_trend = "↓ declining"
+        else:
+            mood_trend = "→ stable"
+
     context = {
         'questionnaires': questionnaires,
         'daily_checkins': daily_checkins,
-        'mood_data_json': json.dumps(mood_data),
         'latest_questionnaire': latest_questionnaire,
-        'avg_mood': avg_mood
+        'avg_mood': avg_mood,
+        'weekly_chart_data': json.dumps(weekly_chart_data),
+        'monthly_chart_data': json.dumps(monthly_chart_data),
+        'today_mood': today_mood,
+        'weekly_avg': weekly_avg,
+        'mood_trend': mood_trend
     }
 
     return render(request, 'history.html', context)
 
 def chat(request):
     return render(request, 'chat.html')
+
+def daily_checkin(request):
+    """Daily mood and sleep check-in"""
+    if request.method == 'POST':
+        try:
+            # Create daily check-in instance from form data
+            checkin = DailyMoodCheckIn(
+                mood_rating=int(request.POST.get('mood_rating')),
+                mood_description=request.POST.get('mood_description', ''),
+                hours_of_sleep=request.POST.get('hours_of_sleep'),
+                baby_wake_count=request.POST.get('baby_wake_count', ''),
+                energy_level=request.POST.get('energy_level'),
+                stress_level=request.POST.get('stress_level'),
+                intrusive_thoughts=request.POST.get('intrusive_thoughts'),
+                notes=request.POST.get('notes', '')
+            )
+            checkin.save()
+
+            messages.success(request, 'Thank you for checking in today! Your data has been saved.')
+            return redirect('history')
+
+        except Exception as e:
+            messages.error(request, f'Error submitting check-in: {str(e)}')
+
+    return render(request, 'daily_checkin.html')

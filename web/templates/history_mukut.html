@@ -1,0 +1,218 @@
+{% extends "web/base.html" %}
+
+{% block title %}Mood Statistics - Materna Minds{% endblock %}
+
+{% block content %}
+<<<<<<< HEAD
+<div class="container py-4">
+  <div class="mb-4">
+    <h2>Mood Statistics & Insights</h2>
+    <p class="text-muted mb-0">View your mood patterns and mental health trends over time.</p>
+  </div>
+=======
+<div class="container">
+    <div class="page-header">
+        <h2>Mood Statistics & Insights</h2>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+>>>>>>> parent of bfe0401 (added navbar)
+
+  <div class="row g-3">
+    <!-- Weekly Mood (clickable) -->
+    <!-- <div class="col-md-4">
+      <div class="card h-100 shadow-sm" role="button"
+           data-bs-toggle="modal" data-bs-target="#weeklyMoodModal"
+           style="cursor:pointer;">
+        <div class="card-body">
+          <h3 class="h5 mb-2">Weekly Mood</h3>
+          <div class="border rounded p-3 text-muted" style="height:180px;">
+            <p class="mb-0">Click to view chart</p>
+          </div>
+        </div>
+      </div>
+    </div> -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm weekly-card" role="button"
+             data-bs-toggle="modal" data-bs-target="#weeklyMoodModal">
+      
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h3 class="h5 mb-1">Weekly Mood</h3>
+                <div class="text-muted small">Last 7 days</div>
+              </div>
+      
+              <span class="badge rounded-pill bg-light text-dark border">
+                Avg <span id="weeklyAvgBadge">6.1</span>/10
+              </span>
+            </div>
+      
+            <!-- Mini preview area -->
+            <div class="mt-3 p-3 rounded-3 bg-light border">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="small text-muted">Today</div>
+                  <div class="fs-4 fw-semibold lh-1">
+                    <span id="weeklyToday">8</span><span class="text-muted fs-6">/10</span>
+                  </div>
+                  <div class="small">
+                    <span class="text-success fw-semibold" id="weeklyTrend">↑ improving</span>
+                    <span class="text-muted"> • sleep <span id="weeklySleep">7.1</span>h</span>
+                  </div>
+                </div>
+      
+                <!-- Tiny sparkline -->
+                <div style="width: 140px; height: 48px;">
+                  <canvas id="weeklySparkline"></canvas>
+                </div>
+              </div>
+            </div>
+      
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+              <span class="small text-muted">Tap to open full chart</span>
+              <span class="small fw-semibold text-primary">View</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Monthly Trends -->
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="h5 mb-2">Monthly Trends</h3>
+          <div class="border rounded p-3 text-muted" style="height:180px;">
+            <p class="mb-0">Chart will be displayed here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Insights -->
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="h5 mb-3">Key Insights</h3>
+          <ul class="mb-0">
+            <li>Your mood has been stable this week</li>
+            <li>Sleep quality impacts your daily mood</li>
+            <li>Consider scheduling a check-in</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Mood Modal -->
+<div class="modal fade" id="weeklyMoodModal" tabindex="-1" aria-labelledby="weeklyMoodModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="weeklyMoodModalLabel">Weekly Mood (Last 7 Days)</h5>
+
+        <!-- Cross close button -->
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">Mood scale: 1 (low) – 10 (high)</small>
+          <small class="text-muted" id="weeklyMoodSummary"></small>
+        </div>
+
+        <!-- Important: give a fixed height so Chart.js renders properly -->
+        <div style="height: 360px;">
+          <canvas id="weeklyMoodChart"></canvas>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // Dummy weekly data (replace later with Django context/DB)
+  const weeklyData = [
+    { day: "Mon", mood: 6, sleep: 4.5 },
+    { day: "Tue", mood: 5, sleep: 3.8 },
+    { day: "Wed", mood: 6, sleep: 5.2 },
+    { day: "Thu", mood: 7, sleep: 6.0 },
+    { day: "Fri", mood: 6, sleep: 4.9 },
+    { day: "Sat", mood: 7, sleep: 6.4 },
+    { day: "Sun", mood: 8, sleep: 7.1 },
+  ];
+
+  let weeklyMoodChartInstance = null;
+
+  // Render chart ONLY when modal opens (prevents sizing bugs)
+  const weeklyMoodModal = document.getElementById("weeklyMoodModal");
+  weeklyMoodModal.addEventListener("shown.bs.modal", () => {
+    const labels = weeklyData.map(d => d.day);
+    const moodValues = weeklyData.map(d => d.mood);
+
+    const avg = (moodValues.reduce((a,b)=>a+b,0) / moodValues.length).toFixed(1);
+    const min = Math.min(...moodValues);
+    const max = Math.max(...moodValues);
+    document.getElementById("weeklyMoodSummary").innerText = `Avg ${avg} • Low ${min} • High ${max}`;
+
+    const ctx = document.getElementById("weeklyMoodChart").getContext("2d");
+
+    // If modal reopened, destroy old chart to avoid duplicates
+    if (weeklyMoodChartInstance) weeklyMoodChartInstance.destroy();
+
+    weeklyMoodChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Mood (1–10)",
+          data: moodValues,
+          borderWidth: 3,
+          tension: 0.35,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 1,
+            max: 10,
+            ticks: { stepSize: 1 },
+            title: { display: true, text: "Mood" }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: (context) => {
+                const i = context.dataIndex;
+                return `Sleep: ${weeklyData[i].sleep}h`;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+
+  // Optional: destroy chart on close (keeps DOM clean)
+  weeklyMoodModal.addEventListener("hidden.bs.modal", () => {
+    if (weeklyMoodChartInstance) {
+      weeklyMoodChartInstance.destroy();
+      weeklyMoodChartInstance = null;
+    }
+  });
+</script>
+{% endblock %}
