@@ -103,7 +103,7 @@ def generate_ppd_score(
             "role": "user",
             "content": (
                 "Use the Retrieved Documents to identify the 5 PPD categories and their symptom patterns/criteria.\n"
-                "Then classify the USER into exactly ONE category and produce a score.\n\n"
+                "Then classify the USER into exactly ONE category and produce a score. User chat contains the interaction with the ai assistant.\n\n"
                 "Scoring guidance:\n"
                 "- score is 0–100 (higher = higher risk/severity).\n"
                 "- confidence is 0.0–1.0.\n"
