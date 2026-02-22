@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from rag.retrieve import retrieve
-from rag.llm import call_featherless
+from .retrieve import retrieve
+from .llm import call_featherless
 
 INDEX_DIR = "rag_index"
 
@@ -61,4 +61,5 @@ def generate_ai_reply(
     )
 
     reply = call_featherless(messages)
+    print("AI Reply:", reply)
     return reply, rag_results

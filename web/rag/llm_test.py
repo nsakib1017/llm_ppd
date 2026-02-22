@@ -1,5 +1,5 @@
 # test_llm.py
-from llm import call_featherless
+from .llm import call_featherless
 
 if __name__ == "__main__":
     messages = [
